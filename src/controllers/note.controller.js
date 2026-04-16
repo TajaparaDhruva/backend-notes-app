@@ -9,6 +9,7 @@ const createNote = async(req,res)=>{
         await newNotes.save();
 
         res.status(201).json({
+            success: true,
             msg:'Notes created successfully.',
             notes : newNotes,
         });
@@ -18,6 +19,7 @@ const createNote = async(req,res)=>{
     }
 };
 
+// POST - create buls notes 
 const CreateMultiple = async (req, res) => {
   try {
     const { notes } = req.body;
@@ -47,8 +49,25 @@ const CreateMultiple = async (req, res) => {
   }
 };
 
+// GET - all notes
+const getAllNotes = async (req,res)=>{
+    try{
+        const notes = await Notes.find();
+
+        res.status(200).json({
+            success: true,
+            msg : 'Notes fetched successfully.',
+            notes,
+        });
+    }
+    catch(error){
+        res.status(500).json({msg:'Server error.',error:error.message})
+    }
+};
+
 
 module.exports = {
     createNote,
-    CreateMultiple
+    CreateMultiple,
+    getAllNotes,
 }
