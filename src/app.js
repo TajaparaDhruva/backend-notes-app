@@ -11,4 +11,4 @@ app.use((req,res)=>{
     res.status(404).json({msg:'Route not found.'});
 });
 
-module.exports = app
+module.exports = app;

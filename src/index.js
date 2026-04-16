@@ -5,10 +5,6 @@ const connectDB = require("./config/db");
 
 //connect to mongoDb
 
-
-
-
-
 function StartServer(){
     connectDB();
 
