@@ -65,9 +65,30 @@ const getAllNotes = async (req,res)=>{
     }
 };
 
+// GET - Get note by ID
+const getNotesById = async(req,res)=>{
+    try{
+        const {id} = req.params;
 
+        const notes = await Notes.findById(id);
+
+         if (!notes) {
+      return res.status(404).json({ msg: 'note not found.' });
+    }
+    
+     res.status(200).json({
+      "success": true,
+      msg:  'Note fetched successfully".',
+      notes,
+    });
+    }
+    catch (error) {
+    res.status(500).json({ msg: 'Server error.', error: error.message });
+  }
+}
 module.exports = {
     createNote,
     CreateMultiple,
     getAllNotes,
+    getNotesById,
 }
