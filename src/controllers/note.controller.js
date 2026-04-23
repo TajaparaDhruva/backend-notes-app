@@ -105,7 +105,6 @@ const replaceNote = async (req, res) => {
     const { id } = req.params;
     const { title, content, category, isPinned } = req.body;
 
-    // 1. Validate ObjectId
     if (!isValidId(id)) {
       return res.status(400).json({
         success: false,
@@ -114,7 +113,6 @@ const replaceNote = async (req, res) => {
       });
     }
 
-    // 2. Enforce FULL replacement (important for PUT)
     if (!title || !content) {
       return res.status(400).json({
         success: false,
@@ -123,7 +121,6 @@ const replaceNote = async (req, res) => {
       });
     }
 
-    // 3. Replace completely
     const updated = await Notes.findByIdAndUpdate(
       id,
       { title, content, category, isPinned },
@@ -134,7 +131,6 @@ const replaceNote = async (req, res) => {
       }
     );
 
-    // 4. Not found case
     if (!updated) {
       return res.status(404).json({
         success: false,
@@ -143,7 +139,6 @@ const replaceNote = async (req, res) => {
       });
     }
 
-    // 5. Success response (correct format)
     res.status(200).json({
       success: true,
       message: "Note replaced successfully",
@@ -159,10 +154,87 @@ const replaceNote = async (req, res) => {
   }
 };
 
+// PATCH - Update specific fields only
+
+const updateNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Validate ObjectId
+    if (!isValidId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID",
+        data: null,
+      });
+    }
+
+    // 2. Handle missing or empty body (THIS FIXES YOUR ERROR)
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields provided to update",
+        data: null,
+      });
+    }
+
+    // 3. Allow only valid fields
+    const allowedFields = ["title", "content", "category", "isPinned"];
+    const updates = {};
+
+    for (let key of Object.keys(req.body)) {
+      if (allowedFields.includes(key)) {
+        updates[key] = req.body[key];
+      }
+    }
+
+    // 4. If no valid fields were sent
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields provided",
+        data: null,
+      });
+    }
+
+    // 5. Update note
+    const updated = await Notes.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    // 6. Not found case
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Note not found",
+        data: null,
+      });
+    }
+
+    // 7. Success response
+    res.status(200).json({
+      success: true,
+      message: "Note updated successfully",
+      data: updated,
+    });
+
+  } catch (error) {
+    console.error(error); // ALWAYS keep this
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
+
 module.exports = {
     createNote,
     CreateMultiple,
     getAllNotes,
     getNotesById,
     replaceNote,
+    updateNote,
 }
