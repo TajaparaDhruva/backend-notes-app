@@ -1,11 +1,23 @@
 const Notes = require('../models/note.model');
 
+const mongoose = require('mongoose');
+
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
+
 // POST - create a note
 const createNote = async(req,res)=>{
+  const {title,content,category,isPinned} = req.body;
     try{
-        const {title,content,category,isPinned} = req.body;
 
-        const newNotes = new Notes({title,content,category,isPinned});
+      if(!title || !content){
+        return res.status(400).json({
+          success:false,
+          message:'Title and Content Required field',
+          data:null,
+        })
+      }
+
+        const newNotes = new Notes(req.body);
         await newNotes.save();
 
         res.status(201).json({
@@ -86,9 +98,71 @@ const getNotesById = async(req,res)=>{
     res.status(500).json({ msg: 'Server error.', error: error.message });
   }
 }
+
+// PUT -  Replace a note completely
+const replaceNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, category, isPinned } = req.body;
+
+    // 1. Validate ObjectId
+    if (!isValidId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID",
+        data: null,
+      });
+    }
+
+    // 2. Enforce FULL replacement (important for PUT)
+    if (!title || !content) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and content are required for full replacement",
+        data: null,
+      });
+    }
+
+    // 3. Replace completely
+    const updated = await Notes.findByIdAndUpdate(
+      id,
+      { title, content, category, isPinned },
+      {
+        new: true,
+        overwrite: true,
+        runValidators: true,
+      }
+    );
+
+    // 4. Not found case
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Note not found",
+        data: null,
+      });
+    }
+
+    // 5. Success response (correct format)
+    res.status(200).json({
+      success: true,
+      message: "Note replaced successfully",
+      data: updated,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
 module.exports = {
     createNote,
     CreateMultiple,
     getAllNotes,
     getNotesById,
+    replaceNote,
 }
